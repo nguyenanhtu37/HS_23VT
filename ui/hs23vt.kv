@@ -1,0 +1,559 @@
+#:import dp kivy.metrics.dp
+#:import sp kivy.metrics.sp
+#:import os os
+
+# ===== Reusable Components =====
+<NavPill@MDButton>:
+    size_hint_y: None
+    height: dp(40)
+    radius: [dp(20)]
+    ripple_effect: True
+    theme_bg_color: "Custom"
+    md_bg_color: (0.39, 0.74, 0.67, 0.20)
+    theme_text_color: "Custom"
+    text_color: (0.39, 0.74, 0.67, 1)
+    style: "tonal"
+
+<DayChip@MDChip>:
+    active: False
+    size_hint: None, None
+    adaptive_height: True
+    adaptive_width: True
+    height: dp(36)
+    radius: dp(18)
+    padding: [dp(12), 0, dp(12), 0]
+    ripple_behavior: True
+    icon: ""
+    theme_bg_color: "Custom"
+    md_bg_color: (0.39, 0.74, 0.67, 1) if root.active else (0.898, 0.961, 0.949, 1)
+    md_bg_color_disabled: 0, 0, 0, 0
+    state_layer_color: 0, 0, 0, 0
+    line_color: (0.39, 0.74, 0.67, 1)
+
+<CardContainer@MDCard>:
+    radius: [dp(16)]
+    elevation: 1
+    padding: 0
+    theme_bg_color: "Custom"
+    md_bg_color: app.surface_low
+
+<NavItem@MDButton>:
+    style: "text"
+    focus_behavior: False
+    hover_behavior: False
+    ripple_effect: False
+    ripple_duration_in: 0
+    ripple_duration_out: 0
+    ripple_scale: 1
+    height: dp(48)
+    size_hint_y: None
+    padding: [dp(12), 0, dp(12), 0]
+    theme_bg_color: "Custom"
+    md_bg_color: 0, 0, 0, 0
+    state_layer_color: 0, 0, 0, 0
+    active: False
+
+<TimetableItem@MDCard>:
+    subject: ""
+    time_str: ""
+    end_str: ""
+    period: ""
+    size_hint_x: 1
+    size_hint_y: None
+    height: self.minimum_height
+    radius: [dp(16)]
+    elevation: 0
+    ripple_behavior: True
+    padding: [dp(14), dp(12), dp(14), dp(12)]
+    theme_bg_color: "Custom"
+    md_bg_color: (0.698, 0.839, 0.820, 1)
+    state_layer_color: 0, 0, 0, 0
+
+    canvas.after:
+        Color:
+            rgba: 0.39, 0.74, 0.67, 1
+        Line:
+            width: 1
+            rounded_rectangle: [self.x + 0.5, self.y + 0.5, self.width - 1, self.height - 1, dp(16) - 0.5]
+
+    MDBoxLayout:
+        orientation: "horizontal"
+        spacing: dp(8)
+        size_hint_y: None
+        height: max(title_lbl.texture_size[1], dp(28)) + dp(2)
+
+        MDLabel:
+            id: title_lbl
+            text: root.subject
+            bold: True
+            font_size: "16sp"
+            theme_text_color: "Custom"
+            text_color: app.on_surface
+            size_hint_x: 1
+            size_hint_y: None
+            text_size: self.width, None
+            height: self.texture_size[1]
+            max_lines: 1
+            shorten: True
+            shorten_from: "right"
+            valign: "middle"
+
+        MDBoxLayout:
+            orientation: "horizontal"
+            size_hint_x: None
+            width: self.minimum_width
+            size_hint_y: None
+            height: dp(28)
+            spacing: dp(8)
+
+            MDChip:
+                size_hint: None, None
+                adaptive_width: True
+                height: dp(26)
+                radius: dp(12)
+                ripple_behavior: False
+                theme_bg_color: "Custom"
+                md_bg_color: 1, 1, 1, 0.25
+                theme_text_color: "Custom"
+
+                MDChipText:
+                    text: f"{root.time_str} – {root.end_str}"
+                    theme_text_color: "Custom"
+                    text_color: app.on_surface
+                    font_size: "13sp"
+
+<SectionTitle@MDBoxLayout>:
+    title: ""
+    size_hint_y: None
+    height: dp(28)
+    padding: [dp(2), 0, dp(2), 0]
+
+    MDLabel:
+        text: root.title
+        bold: True
+        font_size: "15sp"
+        theme_text_color: "Custom"
+        text_color: app.on_surface
+        size_hint_y: None
+        height: dp(24)
+
+    Widget:
+        size_hint_y: None
+        height: dp(2)
+        canvas:
+            Color:
+                rgba: 1, 1, 1, .22
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(1)]
+
+# ===== Mini Player (Floating Card) =====
+<MiniPlayer@MDCard>:
+    title_text: ""
+    subtitle_text: ""
+    playing: False
+    volume: 0.6
+    size_hint: None, None
+    size: dp(320), dp(90)
+    radius: [dp(16)]
+    elevation: 6
+    theme_bg_color: "Custom"
+    md_bg_color: (117/255.0, 128/255.0, 127/255.0, 1)
+    opacity: 0
+    disabled: True
+
+    canvas.after:
+        Color:
+            rgba: 0, 0, 0, 0.08
+        Line:
+            width: 1
+            rounded_rectangle: [self.x + .5, self.y + .5, self.width - 1, self.height - 1, dp(16) - .5]
+
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: [dp(10), dp(10), dp(10), dp(10)]
+        spacing: dp(8)
+
+        # ===== Header =====
+        MDBoxLayout:
+            spacing: dp(6)
+            size_hint_y: None
+            height: dp(26)
+
+            MDLabel:
+                id: mp_title
+                text: root.title_text
+                bold: True
+                font_size: "14sp"
+                size_hint_x: 1
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 1
+                shorten: True
+                shorten_from: "right"
+                max_lines: 1
+                text_size: self.width, None
+                valign: "middle"
+
+            MDIconButton:
+                icon: "pause" if root.playing else "play"
+                on_release: app.toggle_mini_player()
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 1
+                size_hint: None, None
+                size: dp(26), dp(26)
+
+            MDIconButton:
+                icon: "skip-next"
+                on_release: app.mp_next_track()
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 1
+                size_hint: None, None
+                size: dp(26), dp(26)
+
+        # ===== Volume Row =====
+        MDBoxLayout:
+            spacing: dp(8)
+            size_hint_y: None
+            height: dp(24)
+
+            MDIcon:
+                icon: "volume-medium"
+                size_hint_x: None
+                width: dp(20)
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 0.9
+
+            MDSlider:
+                id: mp_volume
+                min: 0
+                max: 1
+                value: root.volume
+                on_value: app._on_mp_volume(self.value)
+
+# ===== Root Screen =====
+MDScreen:
+    id: root_screen
+    theme_bg_color: "Custom"
+    md_bg_color: app.bg_color
+
+    MDNavigationLayout:
+
+        # ===== Main Content =====
+        MDScreenManager:
+            MDScreen:
+                name: "main"
+
+                MDFloatLayout:
+
+                    # ===== Main Vertical Column =====
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(10)
+                        padding: [dp(12), app.status_bar_height, dp(12), 0]
+                        size_hint: 1, 1
+
+                        # ===== Top Bar =====
+                        MDBoxLayout:
+                            size_hint_y: None
+                            height: dp(68)
+                            padding: [0, dp(12), 0, dp(12)]
+                            spacing: dp(10)
+
+                            MDIconButton:
+                                icon: "menu"
+                                theme_text_color: "Custom"
+                                text_color: (0, 0, 0, 1)
+                                size_hint: None, None
+                                size: dp(44), dp(44)
+                                on_release: app.open_drawer()
+
+                            MDCard:
+                                radius: [dp(20)]
+                                elevation: 0
+                                theme_bg_color: "Custom"
+                                md_bg_color: (0.70, 0.84, 0.82, 1)
+                                padding: [dp(16), 0, dp(12), 0]
+                                height: dp(44)
+                                size_hint_y: None
+                                size_hint_x: 1
+
+                                MDBoxLayout:
+                                    orientation: "horizontal"
+                                    spacing: dp(10)
+                                    width: self.minimum_width
+
+                                    MDLabel:
+                                        text: "Tìm kiếm..."
+                                        bold: False
+                                        theme_text_color: "Custom"
+                                        text_color: (0.39, 0.74, 0.67, 1)
+                                        size_hint_x: 1
+                                        text_size: self.size
+                                        halign: "left"
+                                        valign: "center"
+                                        shorten: True
+                                        shorten_from: "right"
+
+                                    Widget:
+                                        size_hint_x: None
+                                        width: dp(6)
+
+                                    MDIconButton:
+                                        icon: "view-agenda-outline"
+                                        theme_text_color: "Custom"
+                                        text_color: (0.39, 0.74, 0.67, 1)
+                                        size_hint: None, None
+                                        size: dp(36), dp(36)
+                                        pos_hint: {"center_y": 0.5}
+
+                                    MDIconButton:
+                                        icon: "swap-vertical"
+                                        theme_text_color: "Custom"
+                                        text_color: (0.39, 0.74, 0.67, 1)
+                                        size_hint: None, None
+                                        size: dp(36), dp(36)
+                                        pos_hint: {"center_y": 0.5}
+
+                            MDCard:
+                                size_hint: None, None
+                                size: dp(44), dp(44)
+                                radius: [dp(22)]
+                                elevation: 0
+                                theme_bg_color: "Custom"
+                                md_bg_color: 1, 1, 1, 0.06
+
+                                FitImage:
+                                    source: app.avatar_src if hasattr(app, "avatar_src") and app.avatar_src and os.path.exists(app.avatar_src) else "data/logo/kivy-icon-512.png"
+                                    radius: [dp(22)]
+
+                        # ===== Body =====
+                        MDScreenManager:
+                            id: sm
+
+                            # ===== Timetable =====
+                            MDScreen:
+                                name: "timetable"
+
+                                MDBoxLayout:
+                                    orientation: "vertical"
+                                    spacing: dp(10)
+
+                                    MDLabel:
+                                        text: "Thời khóa biểu"
+                                        bold: True
+                                        font_size: "20sp"
+                                        halign: "center"
+                                        theme_text_color: "Custom"
+                                        text_color: app.on_surface
+                                        size_hint_y: None
+                                        height: dp(28)
+
+                                    MDBoxLayout:
+                                        size_hint_y: None
+                                        height: dp(48)
+                                        spacing: dp(5)
+
+                                        NavPill:
+                                            style: "elevated"
+                                            size_hint_x: None
+                                            width: dp(80)
+                                            md_bg_color: (0.39, 0.74, 0.67, 1)
+                                            on_release: app.view_today()
+                                            on_press: self.md_bg_color = (0.35, 0.67, 0.61, 1)
+                                            on_release: self.md_bg_color = (0.39, 0.74, 0.67, 1)
+                                            ripple_effect: True
+                                            state_layer_color: 0, 0, 0, 0
+
+                                            MDButtonText:
+                                                text: "Hôm nay"
+                                                theme_text_color: "Custom"
+                                                text_color: 0, 0, 0, 1
+                                                font_size: sp(16)
+
+                                        MDScrollView:
+                                            bar_width: 0
+                                            scroll_type: ['bars', 'content']
+                                            do_scroll_x: True
+                                            do_scroll_y: False
+                                            size_hint_y: None
+                                            height: dp(48)
+
+                                            MDBoxLayout:
+                                                orientation: "horizontal"
+                                                size_hint_x: None
+                                                width: self.minimum_width
+                                                size_hint_y: None
+                                                height: dp(48)
+                                                spacing: dp(5)
+                                                padding: [dp(2), 0, dp(2), dp(5)]
+
+                                                DayChip:
+                                                    id: chip_mon
+                                                    on_release: app.load_timetable("monday")
+                                                    MDChipText:
+                                                        text: "T2"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                                DayChip:
+                                                    id: chip_tue
+                                                    on_release: app.load_timetable("tuesday")
+                                                    MDChipText:
+                                                        text: "T3"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                                DayChip:
+                                                    id: chip_wed
+                                                    on_release: app.load_timetable("wednesday")
+                                                    MDChipText:
+                                                        text: "T4"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                                DayChip:
+                                                    id: chip_thu
+                                                    on_release: app.load_timetable("thursday")
+                                                    MDChipText:
+                                                        text: "T5"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                                DayChip:
+                                                    id: chip_fri
+                                                    on_release: app.load_timetable("friday")
+                                                    MDChipText:
+                                                        text: "T6"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                                DayChip:
+                                                    id: chip_sat
+                                                    on_release: app.load_timetable("saturday")
+                                                    MDChipText:
+                                                        text: "T7"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                                DayChip:
+                                                    id: chip_sun
+                                                    on_release: app.load_timetable("sunday")
+                                                    MDChipText:
+                                                        text: "CN"
+                                                        theme_text_color: "Custom"
+                                                        text_color: (1, 1, 1, 1) if getattr(self.parent, 'active', False) else app.on_surface
+                                                        font_size: "14sp"
+
+                                    MDScrollView:
+                                        bar_width: 0
+                                        theme_bg_color: "Custom"
+                                        md_bg_color: 0, 0, 0, 0
+
+                                        MDBoxLayout:
+                                            id: timetable_container
+                                            orientation: "vertical"
+                                            size_hint_y: None
+                                            height: self.minimum_height
+                                            padding: [0, dp(6), 0, dp(96)]
+                                            spacing: dp(12)
+
+                                            SectionTitle:
+                                                id: morning_title
+                                                title: "Buổi sáng"
+                                                size_hint_y: None
+                                                height: dp(28)
+
+                                            MDList:
+                                                id: morning_list
+                                                padding: [0, 0, 0, 0]
+                                                spacing: dp(12)
+
+                                            SectionTitle:
+                                                id: afternoon_title
+                                                title: "Buổi chiều"
+                                                size_hint_y: None
+                                                height: dp(28)
+
+                                            MDList:
+                                                id: afternoon_list
+                                                padding: [0, 0, 0, 0]
+                                                spacing: dp(12)
+
+                                            MDLabel:
+                                                id: empty_tt_label
+                                                text: "Chưa có tiết học nào."
+                                                halign: "center"
+                                                valign: "center"
+                                                bold: True
+                                                font_size: "16sp"
+                                                theme_text_color: "Custom"
+                                                text_color: app.on_surface
+                                                size_hint_y: None
+                                                height: 0
+                                                opacity: 0
+
+                    # ===== Floating Action Button =====
+                    MDIconButton:
+                        id: corner_fab
+                        icon: "plus"
+                        style: "filled"
+                        theme_bg_color: "Custom"
+                        md_bg_color: (0.39, 0.74, 0.67, 1)
+                        size_hint: None, None
+                        size: dp(56), dp(56)
+                        pos_hint: {"right": 0.98, "y": 0.03}
+                        elevation: 6
+                        radius: [25, 25, 25, 25]
+                        on_release: app.on_center_fab()
+
+                    MiniPlayer:
+                        id: mini_player
+                        pos_hint: {"x": 0.02, "y": 0.03}
+
+        # ===== Navigation Drawer =====
+        MDNavigationDrawer:
+            id: nav_drawer
+            width: dp(320)
+            radius: [0, dp(24), dp(24), 0]
+            theme_bg_color: "Custom"
+            md_bg_color: app.drawer_bg
+
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: [dp(20), app.status_bar_height, dp(20), dp(20)]
+                spacing: dp(16)
+
+                MDLabel:
+                    text: "Nhắc học tập HS_23VT"
+                    bold: True
+                    font_size: "18sp"
+                    theme_text_color: "Custom"
+                    text_color: 1, 1, 1, 0.95
+                    size_hint_y: None
+                    height: dp(28)
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(6)
+
+                    NavItem:
+                        active: app.current_section == "timetable"
+                        on_release: app.nav_after_ripple("timetable")
+
+                        MDButtonIcon:
+                            icon: "calendar" if app.current_section == "timetable" else "calendar-outline"
+                            theme_text_color: "Custom"
+                            text_color: (1, 1, 1, 1) if app.current_section == "timetable" else (1, 1, 1, 0.75)
+
+                        MDButtonText:
+                            text: "Thời khóa biểu"
+                            bold: True
+                            theme_text_color: "Custom"
+                            text_color: (1, 1, 1, 1) if app.current_section == "timetable" else (1, 1, 1, 0.85)
