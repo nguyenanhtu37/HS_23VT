@@ -3,7 +3,8 @@ title = HS_23VT
 package.name = hs23vt
 package.domain = org.example
 source.dir = .
-source.include_exts = py,kv,png,xml,jpg,ini,json,ttf,otf,mp3,wav
+source.include_exts = py,kv,png,xml,jpg,ini,json,ttf,otf,mp3,wav,env
+source.include_patterns = .env
 
 version = 1.0.0
 

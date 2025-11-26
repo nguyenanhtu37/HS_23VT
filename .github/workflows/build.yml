@@ -58,6 +58,10 @@ jobs:
         pip install --upgrade pip
         pip install buildozer cython==0.29.33
     
+    - name: Create .env file
+      run: |
+        echo "FIREBASE_WEB_API_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}" > .env
+    
     - name: Build APK
       run: |
         yes | buildozer android debug
