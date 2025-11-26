@@ -16,7 +16,7 @@ android.api = 33
 android.minapi = 24
 android.permissions = POST_NOTIFICATIONS,WAKE_LOCK,RECEIVE_BOOT_COMPLETED,FOREGROUND_SERVICE,INTERNET,VIBRATE
 
-services = reminder:features/android_service.py
+# services = reminder:features/android_service.py
 
 [buildozer]
 log_level = 2
