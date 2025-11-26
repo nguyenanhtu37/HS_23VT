@@ -33,8 +33,6 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.card import MDCard
 from typing import Optional
 from features.notes import Note
-from dotenv import load_dotenv
-load_dotenv()
 
 # ============================== CẤU HÌNH CỬA SỔ & BÀN PHÍM ==============================
 Config.set('graphics', 'width', '411')

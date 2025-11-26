@@ -3,12 +3,11 @@ title = HS_23VT
 package.name = hs23vt
 package.domain = org.example
 source.dir = .
-source.include_exts = py,kv,png,xml,jpg,ini,json,ttf,otf,mp3,wav,env
-source.include_patterns = .env
+source.include_exts = py,kv,png,xml,jpg,ini,json,ttf,otf,mp3,wav
 
 version = 1.0.0
 
-requirements = python3,kivy,kivymd,plyer,hostpython3,openssl,requests,urllib3,pyjnius,python-dotenv
+requirements = python3,kivy,kivymd,plyer,hostpython3,openssl,requests,urllib3,pyjnius
 
 orientation = portrait
 fullscreen = 0

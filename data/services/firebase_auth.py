@@ -1,9 +1,6 @@
 import os, time, json, requests
-from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv(), override=False)
-
-API_KEY = os.getenv("FIREBASE_WEB_API_KEY")
+API_KEY = "AIzaSyAlxeS9-te9U-vf7cJQdhhYVlMmbQ7WMZQ"
 
 _ID_TOKEN = None
 _REFRESH_TOKEN = None
